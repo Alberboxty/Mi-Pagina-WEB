@@ -1,11 +1,46 @@
-import { newDiaryEntry, Weather, Visibility} from "./types";
+import { ServidoresEntry, estadoServidor } from "./types";
 
-const parseComment = (commentFromRequest: any): string => {
-    if (!isString(commentFromRequest)) {
-        throw new Error('Incorrecto o comentario invalido')
+const parsenombre_servidor = (nombre_servidorFromRequest: any): string => {
+    if (!isString(nombre_servidorFromRequest)) {
+        throw new Error('Incorrecto o nombre del servidor invalido')
     }
 
-    return commentFromRequest
+    return nombre_servidorFromRequest
+}
+
+const parseEstado = (estadoFromRequest: any): estadoServidor => {
+    if (!isString(estadoFromRequest) || !isEstado(estadoFromRequest)) {
+        throw new Error('Incorrecto o estado invalido')
+    }
+    return estadoFromRequest
+}
+
+const isEstado = (param: any): boolean => {
+    return Object.values(estadoServidor).includes(param)
+}
+
+const parseIp = (ipFromRequest: any): string => {
+    if (!isString(ipFromRequest)) {
+        throw new Error('Incorrecto o IP invalida')
+    }
+
+    return ipFromRequest
+}
+
+const parseImagen = (imagenFromRequest: any): string => {
+    if (!isString(imagenFromRequest)) {
+        throw new Error('Incorrecto o imagen invalida')
+    }
+
+    return imagenFromRequest
+}
+
+const parseDescription = (descriptionFromRequest: any): string => {
+    if (!isString(descriptionFromRequest)) {
+        throw new Error('Incorrecto o descripción invalida')
+    }
+
+    return descriptionFromRequest
 }
 
 const parseDate = (dateFromRequest: any): string => {
@@ -13,20 +48,6 @@ const parseDate = (dateFromRequest: any): string => {
         throw new Error('Incorrecto o fecha invalida')
     }
     return dateFromRequest
-}
-
-const parseWeather = (weatherFromRequest: any): Weather => {
-    if (!isString(weatherFromRequest) || !isWeather(weatherFromRequest)) {
-        throw new Error('Incorrecto o tiempo invalido')
-    }
-    return weatherFromRequest
-}
-
-const parseVisibility = (visibilityFromRequest: any): Visibility => {
-    if (!isString(visibilityFromRequest) || !isVisibility(visibilityFromRequest)) {
-        throw new Error('Incorrecto o visibilidad invalido')
-    }
-    return visibilityFromRequest
 }
 
 const isString = (string: string): boolean => {
@@ -37,24 +58,20 @@ const isDate = (date: string): boolean => {
     return Boolean(Date.parse(date))
 }
 
-const isWeather = (param: any): boolean => {
-    return Object.values(Weather).includes(param)
-}
 
-const isVisibility = (param: any): boolean => {
-    return Object.values(Visibility).includes(param)
-}
 
-const toNewDiaryEntry = (object: any): newDiaryEntry => {
-    const newEntry: newDiaryEntry = {
-        comment: parseComment(object.comment),
-        date: parseDate(object.date),
-        weather: parseWeather(object.weather),
-        visibility: parseVisibility(object.visibility)
+const toNewServidoresEntry = (object: any): ServidoresEntry => {
+    const newEntry: ServidoresEntry = {
+        nombre_servidor: parsenombre_servidor(object.nombre_servidor),
+        estado: parseEstado(object.estado),
+        ip: parseIp(object.ip),
+        imagen: parseImagen(object.imagen),
+        description: parseDescription(object.description),
+        date: parseDate(object.date)
 
         // ...
     }
     return newEntry
 }
 
-export default toNewDiaryEntry
+export default toNewServidoresEntry

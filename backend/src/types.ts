@@ -1,29 +1,16 @@
-export enum Weather {
-    Soleado = 'Soleado',
-    Nublado = 'Nublado',
-    Lluvioso = 'Lluvioso',
-    ParcialmenteSoleado = 'Parcialmente soleado',
-    ParcialmenteNublado = 'Parcialmente nublado'
-}
-export enum Visibility {
-    Buena = 'Buena',
-    Moderada = 'Moderada',
-    Baja = 'Baja',
-    Perfecta = 'Perfecta'
+export enum estadoServidor {
+    Cerrado = 'Cerrado',
+    Abierto = 'Abierto',
+    Mantenimiento = 'Mantenimiento'
 }
 
-export interface DiaryEntry {
-    id: number,
-    date: string,
-    weather: Weather,
-    visibility: Visibility,
-    comment: string
-
+export interface ServidoresEntry {
+    nombre_servidor: string,
+    estado: estadoServidor,
+    ip: string,
+    imagen: string,
+    description: string,
+    date: string
 }
 
-
-
-//export type NonSensitiveInfoDiaryEntry = Pick<DiaryEntry, 'id' | 'date' | 'weather' | 'visibility'>
-
-export type NonSensitiveInfoDiaryEntry = Omit<DiaryEntry, "comment">
-export type newDiaryEntry = Omit<DiaryEntry, 'id'>
+//export type NonSensitiveInfoDiaryEntry = Omit<ServidoresEntry, "ip">
