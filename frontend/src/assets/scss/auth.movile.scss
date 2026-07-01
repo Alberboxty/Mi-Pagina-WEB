@@ -1,0 +1,64 @@
+// > 720px Movil and (orientation: portrait)
+
+// para movil samsung galaxy S25 android 14
+
+@media (max-width: 720px) {
+  main {
+    background-color: rgba(255, 0, 0, 0);
+    section {
+      width: 300px;
+      .login {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        height: 400px;
+        .ColorBlock {
+          left: -75px;
+          bottom: 55px;
+          transform: rotate(50deg);
+          border-radius: 300px;
+          transition: bottom 0.5s ease;
+        }
+        .LColorBlockActive{
+          bottom: 999px;
+          transition: bottom 0.5s ease;
+
+        }
+        .TextBlock {
+          h2{
+            display: none;
+          }
+          .texto {
+            display: none;
+          }
+        }
+      } 
+      .Registro{
+        display: flex;
+        flex-direction: column-reverse;
+        justify-content: center;
+        height: 400px;
+        .ColorBlock {
+          left: -75px;
+          bottom: -999px;
+          transform: rotate(50deg);
+          border-radius: 300px;
+          transition: bottom 0.5s ease;
+        }
+        .RColorBlockActive{
+          bottom: 55px;
+          transition: bottom 0.5s ease;
+
+        }
+        .TextBlock {
+          h2{
+            display: none;
+          }
+          .texto {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}

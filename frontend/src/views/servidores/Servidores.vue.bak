@@ -1,0 +1,325 @@
+<script setup lang="ts">
+  import { ref, onMounted } from 'vue'
+  import axios from 'axios'
+
+  // Referencia a los inputs
+
+  const input_nombre_servidor = ref<string>('')
+  const input_estado = ref<string>('')
+  const input_ip = ref<string>('')
+  const imagenFile = ref<File | null>(null)
+  const imagenPreview = ref<string | null>(null)
+  const input_description = ref<string>('')
+
+  const servidores = ref<{ id: number, nombre_servidor: string, estado: string, ip: string, imagen: string; description: string, date: string }[]>([])
+
+  const idSeleccionado = ref<number | null>(null);
+  const modoFormulario = ref<'crear' | 'editar'>('crear');
+
+  // Ver imagen enviada.
+  const onFileChange = (event: Event) => {
+    const input = event.target as HTMLInputElement
+
+    if (input.files && input.files.length > 0) {
+      const file = input.files[0]
+
+      imagenFile.value = file              // 👈 ARCHIVO REAL
+      imagenPreview.value = URL.createObjectURL(file) // 👈 PREVIEW
+    }
+  }
+
+  const resetFormulario = () => {
+    input_nombre_servidor.value = '';
+    input_estado.value = '';
+    input_ip.value = '';
+    input_description.value = '';
+    imagenFile.value = null;
+    imagenPreview.value = null;
+
+    idSeleccionado.value = null;
+    modoFormulario.value = 'crear';
+  };
+
+  const enviar_formulario = async () => {
+    try {
+      const formData = new FormData();
+      formData.append('nombre_servidor', input_nombre_servidor.value);
+      formData.append('estado', input_estado.value);
+      formData.append('ip', input_ip.value);
+      formData.append('description', input_description.value);
+      // 👇 ESTO ES LO MÁS IMPORTANTE
+
+      if (imagenFile.value) formData.append('imagen', imagenFile.value);
+
+      let data;
+
+
+      // Modo Crear y Editar
+      if (modoFormulario.value === 'crear') {
+        // POST
+        if (!imagenFile.value) {
+          alert('Falta la imagen')
+          return
+        }
+        
+        const postear = await axios.post('http://localhost:4000/api/servidores', formData);
+        data = postear.data;
+        console.log('Enviado correctamente:', postear.data);
+
+        // Agregar a la lista local
+        servidores.value.push(data);
+
+      } else {
+        // PATCH
+        const res = await axios.patch(
+          `http://localhost:4000/api/servidores/${idSeleccionado.value}`,
+          formData
+        );
+        data = res.data;
+
+        // Actualizar la lista local
+        // const index = servidores.value.findIndex(s => s.id === idSeleccionado.value);
+        // if (index !== -1) servidores.value[index] = data;
+
+
+        // Actualizar la lista local de forma reactiva
+        const index = servidores.value.findIndex(s => s.id === idSeleccionado.value);
+        if (index !== -1) {
+          servidores.value.splice(index, 1, data);
+        }
+
+      }
+
+      // Resetear formulario
+      resetFormulario();
+
+    } catch (error) {
+      console.error('Error al enviar formulario', error);
+    }
+  };
+
+
+  const obtener_servidores = async () => {
+    try {
+      
+      const obtener = await axios.get('http://localhost:4000/api/servidores')
+      servidores.value = obtener.data
+    }
+    catch (error) {
+      console.error('Error al obtener los servidores:', error)
+    }
+  }
+
+  // const obtener_servidor = async (id: number) => {
+  //   try {
+      
+  //     const obtener = await axios.get('http://localhost:4000/api/servidores/${id}')
+  //     servidores.value = servidores.value.filter(
+  //       servidor => servidor.id !== id
+  //     );
+  //   }
+  //   catch (error) {
+  //     console.error('Error al obtener el servidor:', error)
+  //   }
+  // }
+
+  const eliminarServidor = async (id: number) => {
+    const confirmar = confirm('¿Seguro que quieres eliminar este servidor?');
+
+    if (!confirmar) return;
+
+    try {
+      await axios.delete(`http://localhost:4000/api/servidores/${id}`);
+
+      // quitar de la lista sin volver a pedir todo
+      servidores.value = servidores.value.filter(
+        servidor => servidor.id !== id
+      );
+
+    } catch (error) {
+      console.error('Error al eliminar servidor', error);
+      alert('No se pudo eliminar el servidor');
+    }
+  };
+
+  
+
+  const editarServidor = (servidor: typeof servidores.value[0]) => {
+    // Llenar inputs
+    input_nombre_servidor.value = servidor.nombre_servidor;
+    input_estado.value = servidor.estado;
+    input_ip.value = servidor.ip;
+    input_description.value = servidor.description;
+    imagenPreview.value = `http://localhost:4000${servidor.imagen}`;
+    imagenFile.value = null; // Solo si quiere reemplazar
+
+    // Cambiar modo a editar
+    idSeleccionado.value = servidor.id;
+    modoFormulario.value = 'editar';
+  };
+
+  onMounted(() => {
+    obtener_servidores()
+  })
+
+
+</script>
+
+<template>
+  <div>
+    <form @submit.prevent="enviar_formulario">
+      <h1>
+        {{ modoFormulario === 'crear' 
+            ? 'Creando un nuevo servidor' 
+            : `Editando: ${input_nombre_servidor}` }}
+      </h1>
+      <label for="">nombre_servidor</label>
+      <input type="text" v-model="input_nombre_servidor" placeholder="nombre_servidor">
+
+      <br>
+
+      <label for="">estado </label>
+      <span>online</span>
+      <input type="radio" v-model="input_estado" name="estado" value="online">
+      <span>offline</span>
+      <input type="radio" v-model="input_estado" name="estado" value="offline">
+      <span>mantenimiento</span>
+      <input type="radio" v-model="input_estado" name="estado" value="mantenimiento">
+
+      <br>
+
+      <label for="">ip</label>
+      <input type="text" v-model="input_ip" placeholder="ip">
+
+      <br>
+      <label for="">imagen</label>
+      <input type="file" @change="onFileChange" placeholder="imagen">
+      
+
+      <br>
+
+      <label for="">description</label>
+      <input type="text" v-model="input_description" placeholder="description">
+
+      <button type="submit">
+        {{ modoFormulario === 'crear' ? 'Crear servidor' : 'Actualizar servidor' }}
+      </button>
+    </form>
+
+    <section class="vistaprevia">
+      <h1>Vista Previa</h1>
+      <p>nombre_servidor: {{ input_nombre_servidor }}</p>
+      <p>estado: {{ input_estado }}</p>
+      <p>ip: {{ input_ip }}</p>
+      <!-- <p>imagen: {{ input_imagen }}</p> -->
+      <img v-if="imagenPreview" :src="imagenPreview" alt="Vista previa" />
+      <p>description: {{ input_description }}</p>
+    </section>
+
+    <section class="contenidos">
+      <h1>Tabla de contenido</h1>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>nombre_servidor</th>
+            <th>estado</th>
+            <th>ip</th>
+            <th>description</th>
+            <th>imagen</th>
+            <th>Fecha de creación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="servidor in servidores" :key="servidor.id"> 
+            <td>{{ servidor.id }}</td>
+            <td>{{ servidor.nombre_servidor }}</td>
+            <td>{{ servidor.estado }}</td>
+            <td>{{ servidor.ip }}</td>
+            <td>{{ servidor.description }}</td>
+            <td><img 
+              :src="`http://localhost:4000${servidor.imagen}`" 
+              alt="imagen del servidor" 
+              width="100"
+              >
+            </td>
+            <td>{{ servidor.date }}</td>
+            <td>
+              <button @click="editarServidor(servidor)">Editar</button>
+            </td>
+            <td>
+              <button @click="eliminarServidor(servidor.id)">Eliminar</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <h1>Servidores en articulo</h1>
+    <section class="servidores">
+      <article v-for="servidor in servidores" :key="servidor.id"> 
+        <img 
+          :src="`http://localhost:4000${servidor.imagen}`" 
+          alt="imagen del servidor" 
+          width="100"
+        >
+        <div>
+          <div>
+            <h2>{{ servidor.nombre_servidor }}</h2>
+            <p>{{ servidor.estado }}</p>
+          </div>
+          <p>{{ servidor.ip }}</p>
+          
+        </div>
+      </article>
+    </section>
+  </div>
+</template>
+
+<style scoped lang="scss">
+  
+    div{
+      form {
+        background-color: rgb(250, 250, 160);
+      }
+      .vistaprevia{
+        background-color: rgb(121, 139, 118);
+
+      }
+      .contenidos{
+        background-color: rgb(113, 172, 172);
+      }
+      .servidores{
+        //background-color: greenyellow;
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        article{
+          padding: 20px;
+          width: 400px;
+          height: 500px;
+          //background-color: aquamarine;
+          box-shadow: 5px 5px 10px black;
+          border-radius: 10px;
+          img{
+            
+            width: 100%;
+            height: 400px;
+            box-shadow: 5px 5px 10px black;
+            border-radius: 5px;
+            object-fit: cover;
+          }
+          div{
+            display: flex;
+            flex-direction: column;
+            div{
+              display: flex;
+              flex-direction: row;
+              justify-content: space-between;
+              align-items: center;
+            }
+          }
+        }
+      }
+    }
+</style>

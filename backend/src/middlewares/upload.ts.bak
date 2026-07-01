@@ -1,0 +1,44 @@
+import multer, { FileFilterCallback } from 'multer';
+import { Request } from 'express';
+import path from 'path';
+
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads', 'servidores');
+
+const storage = multer.diskStorage({
+  destination: (
+    _req: Request,
+    _file: Express.Multer.File,
+    cb: (error: Error | null, destination: string) => void
+  ) => {
+    cb(null, UPLOAD_DIR);
+  },
+
+  filename: (
+    _req: Request,
+    file: Express.Multer.File,
+    cb: (error: Error | null, filename: string) => void
+  ) => {
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
+  }
+});
+
+const fileFilter = (
+  _req: Request,
+  file: Express.Multer.File,
+  cb: FileFilterCallback
+) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Solo se permiten imágenes'));
+  }
+};
+
+export const upload = multer({
+  storage,
+  fileFilter,
+  limits: {
+    fileSize: 5 * 1024 * 1024
+  }
+});

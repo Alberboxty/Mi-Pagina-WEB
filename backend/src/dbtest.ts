@@ -21,8 +21,6 @@ async function testConnection() {
     client.release();
   } catch (error) {
     console.error('❌ Error conectando a la base de datos:', error);
-  } finally {
-    await pool.end(); // cierra el pool
   }
 }
 

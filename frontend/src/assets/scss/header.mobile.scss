@@ -1,0 +1,28 @@
+@media (max-width: 1000px)  {
+    header {
+        nav {
+            flex-direction: column;
+            .flechaizquierda {
+                display: none;
+            }
+            .flechaderecha {
+                display: none;
+            }
+            .inicio {
+                // background-color: red;
+                width: 100vw;
+            }
+            .menu {
+                ul {
+                    top: -400;
+                    right: 50%;
+                    transform: translateX(50%);
+                }
+
+                .ulmenu{
+                    top: 0px;
+                }
+            }
+        }
+    }
+}
