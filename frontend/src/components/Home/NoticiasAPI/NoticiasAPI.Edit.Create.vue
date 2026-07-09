@@ -51,6 +51,10 @@
         <button type="submit">
           {{ modoFormularioNews === 'crear' ? 'Crear noticia' : 'Actualizar noticia' }}
         </button>
+
+        <button type="submit">
+          {{ modoFormularioNews === 'crear' ? 'Crear noticia' : 'Actualizar noticia' }}
+        </button>
         <button :click="resetNewsFormulario">Borrar</button>
       </form>
       <article class="vistaprevia">

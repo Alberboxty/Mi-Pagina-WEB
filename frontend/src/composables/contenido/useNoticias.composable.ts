@@ -4,9 +4,12 @@ import type { noticias } from '@/types/noticias.types'
 
 import {
     obtenerNoticias,
+    obtenerNoticia,
     crearNoticia,
     editarNoticia,
-    eliminarNoticia
+    eliminarNoticia,
+    publicarNoticia,
+    despublicarNoticia
 } from '@/api/contenido/noticias.api'
 
 const imagenFile = ref<File | null>(null)
@@ -24,6 +27,8 @@ const idNewsSeleccionado = ref<number | null>(null);
 export function useNoticias() {
     
     const noticias = ref<noticias[]>([])
+
+    const noticiasID = ref<noticias | null>(null)
 
     const onFileChange = (event: Event) => {
         const input = event.target as HTMLInputElement
@@ -51,6 +56,14 @@ export function useNoticias() {
     const obtenerFNoticias = async () => {
         try {
             noticias.value = await obtenerNoticias()
+        }catch (error) {
+            console.error('Error al obtener los servidores:', error)
+        }
+    }
+
+    const obtenerFNoticia = async (id: number) => {
+        try {
+            noticiasID.value = await obtenerNoticia(id)
         }catch (error) {
             console.error('Error al obtener los servidores:', error)
         }
@@ -123,21 +136,47 @@ export function useNoticias() {
     }
 
     const eliminarFNoticia = async(id:number) => {
-            const confirmar = confirm('¿Seguro que quieres eliminar esta noticia?');
-            if (!confirmar) return;
-    
-            try {
-                await eliminarNoticia(id)
-    
-                // quitar de la lista sin volver a pedir todo
-                noticias.value = noticias.value.filter(
-                    noticia => noticia.id !== id
-                );
-            } catch (error) {
-                console.error('Error al eliminar la noticia', error);
-                alert('No se pudo eliminar la noticia');
-            }
+        const confirmar = confirm('¿Seguro que quieres eliminar esta noticia?');
+        if (!confirmar) return;
+
+        try {
+            await eliminarNoticia(id)
+
+            // quitar de la lista sin volver a pedir todo
+            noticias.value = noticias.value.filter(
+                noticia => noticia.id !== id
+            );
+        } catch (error) {
+            console.error('Error al eliminar la noticia', error);
+            alert('No se pudo eliminar la noticia');
         }
+    }
+
+    const publicarFNoticia = async(noticia: noticias) => {
+        const accion = noticia.publicado ? 'despublicar' : 'publicar';
+        const confirmar = confirm(`¿Seguro que quieres ${accion} esta noticia?`);
+        if (!confirmar) return;
+
+        try {
+            if (noticia.publicado) {
+                await despublicarNoticia(noticia.id)
+            } else {
+                await publicarNoticia(noticia.id)
+            }
+
+            // Recargar la noticia desde la BD para obtener el estado real
+            const noticiaActualizada = await obtenerNoticia(noticia.id)
+            const index = noticias.value.findIndex(n => n.id === noticia.id)
+            if (index !== -1) {
+                noticias.value[index] = noticiaActualizada
+            }
+            
+        } catch (error) {
+            console.error('Error al eliminar la noticia', error);
+            alert('No se pudo eliminar la noticia');
+        }
+
+    }
 
     return {
         imagenPreview,
@@ -148,12 +187,15 @@ export function useNoticias() {
         modoFormularioNews,
         idNewsSeleccionado,
         noticias,
+        noticiasID,
         onFileChange,
         resetNewsFormulario,
         obtenerFNoticias,
+        obtenerFNoticia,
         enviarFNoticia,
         editarFNoticia,
-        eliminarFNoticia
+        eliminarFNoticia,
+        publicarFNoticia
     }
 
 }

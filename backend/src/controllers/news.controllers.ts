@@ -1,25 +1,55 @@
 import { pool } from "../db"
 
-import { DB_TABLE_NOTICIAS } from "../config"
+import { DB_TABLE_NOTICIAS, DB_TABLE_USUARIOS } from "../config"
 
 import { Request, Response } from "express"
 
 import { User } from "../models/usuarios.model";
 
+import { newsModel } from "../models/content/noticias.model"
+
+import { TokenPayload } from '../models/usuarios.model';
+
 import fs from 'fs';
 import path from 'path';
 
-export const obtenerNoticias = async (_req: Request, res: Response) => {
-    const { rows } = await pool.query(`SELECT * FROM ${DB_TABLE_NOTICIAS }`);
-    return res.status(200).json(rows);
+export const obtenerNoticias = async (req: Request, res: Response) => {
+    const user = (req as any).user as TokenPayload | undefined;
+    const esAdmin = user?.id_rol === 2;
+    const userId = user?.id;
+    console.log("Es admin?", esAdmin)
+    console.log("Es usuarioID?", userId)
+    try {
+        const rows = await newsModel.isPublicNew(userId, esAdmin);
+        return res.status(200).json(rows);
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ error: 'Error al obtener noticias' });
+    }
 }
 
 export const obtenerNoticia = async (req: Request, res: Response) => {
     const { id } = req.params; // capturamos el id de la URL
+    const user = (req as any).user as TokenPayload | undefined;
+    const esAdmin = user?.id_rol === 2;
+    const userId = user?.id;
 
     try {
+        const newAccess = await newsModel.isPublicNewID(Number(id), userId, esAdmin);
+
+        if (!newAccess) {
+            return res.status(403).json({ error: 'No tienes permiso para ver esta noticia' });
+        }
+
         const result = await pool.query(
-            `SELECT * FROM ${DB_TABLE_NOTICIAS} WHERE id = $1`,
+            `
+            SELECT 
+                ${DB_TABLE_NOTICIAS}.*,
+                ${DB_TABLE_USUARIOS}.username AS autor_nombre
+            FROM ${DB_TABLE_NOTICIAS} 
+            LEFT JOIN ${DB_TABLE_USUARIOS} ON ${DB_TABLE_NOTICIAS}.autor_id = ${DB_TABLE_USUARIOS}.id
+            WHERE ${DB_TABLE_NOTICIAS}.id = $1
+            `,
             [id]
         );
 
@@ -168,5 +198,55 @@ export const eliminarNoticia = async (req: Request, res: Response) => {
     } catch (error) {
         console.error(error);
         return res.status(500).json({ ok: false, msg: 'Error al eliminar la noticia' });
+    }
+}
+
+export const publicarNoticia = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const user = (req as any).user as TokenPayload | undefined;
+    const esAdmin = user?.id_rol === 2;
+    const userId = user?.id;
+
+    try {
+        const newEditAccess = await newsModel.isEditableNew(Number(id), userId, esAdmin);
+        
+        if (!newEditAccess) {
+            res.status(403).json({ error: 'No tienes permiso para editar esta noticia' });
+            return 
+        }
+
+        const { rows } = await pool.query(
+            `UPDATE ${DB_TABLE_NOTICIAS} SET publicado = true WHERE id = $1 RETURNING *`,
+            [id]
+        );
+        if (rows.length === 0) return res.status(404).json({ ok: false, msg: 'Noticia no encontrada' });
+        return res.json({ ok: true, noticia: rows[0] });
+    } catch (error) {
+        return res.status(500).json({ ok: false, msg: 'Error al publicar la noticia' });
+    }
+}
+
+export const despublicarNoticia = async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const user = (req as any).user as TokenPayload | undefined;
+    const esAdmin = user?.id_rol === 2;
+    const userId = user?.id;
+
+    try {
+        const newEditAccess = await newsModel.isEditableNew(Number(id), userId, esAdmin);
+        
+        if (!newEditAccess) {
+            res.status(403).json({ error: 'No tienes permiso para editar esta noticia' });
+            return 
+        }
+
+        const { rows } = await pool.query(
+            `UPDATE ${DB_TABLE_NOTICIAS} SET publicado = false WHERE id = $1 RETURNING *`,
+            [id]
+        );
+        if (rows.length === 0) return res.status(404).json({ ok: false, msg: 'Noticia no encontrada' });
+        return res.json({ ok: true, noticia: rows[0] });
+    } catch (error) {
+        return res.status(500).json({ ok: false, msg: 'Error al publicar la noticia' });
     }
 }

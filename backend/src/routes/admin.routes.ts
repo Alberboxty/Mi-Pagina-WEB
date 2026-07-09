@@ -25,7 +25,7 @@ const router = express.Router()
 
 //contenido
 router.use("/servidores", authorizePermission(), servidoresRoutes)
-router.use("/noticias", newsRoutes)
+router.use("/noticias", authorizePermission(), newsRoutes)
 
 //gestion
 router.use("/usuarios", authorizePermission(), usuariosRoutes)

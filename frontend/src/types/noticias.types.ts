@@ -7,5 +7,6 @@ export interface noticias {
     fecha_creacion: string
     version: string, 
     autor_id: number,
+    autor_nombre: string,
     publicado: boolean
 }

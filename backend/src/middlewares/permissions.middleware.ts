@@ -2,15 +2,9 @@ import { Request, Response, NextFunction } from "express"
 import permisosModel from "../models/permisos.model"
 import { verifyToken } from "../middlewares/jwt.middleware"
 
-interface AuthRequest extends Request {
-  user?: {
-    id: number,
-    email: string
-  }
-}
 
 export const authorizePermission = () => {
-    return async (req: AuthRequest, res: Response, next: NextFunction) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
         try{
             // Construir ruta real
             const normalizeRoute = (route: string): string => {
@@ -29,7 +23,7 @@ export const authorizePermission = () => {
             const IsPublic = await permisosModel.IsPublicRoute(route, method)
             // Verificar que exista
 
-            console.log("isPublic", IsPublic)
+            // console.log("isPublic", IsPublic)
             if (IsPublic) {
                 next()
                 return
@@ -46,7 +40,7 @@ export const authorizePermission = () => {
             })
 
             // Usuario desde el JSONWEBTOKEN
-            const userId = req.user?.id;
+            const userId = (req as any).user?.id;
 
             console.log("User:", userId)
 
@@ -70,7 +64,7 @@ export const authorizePermission = () => {
             next()
         } catch (error) {
             console.error("Error en authorizePermission:",error);
-            console.error("userId:", req.user?.id);
+            console.error("userId:", (req as any).user?.id);
             console.error("route:", req.originalUrl.split("?")[0]?.replace(/\/$/, ""));
             console.error("method", req.method);
             res.status(500).json({ error: `Error verificando permisos.` });

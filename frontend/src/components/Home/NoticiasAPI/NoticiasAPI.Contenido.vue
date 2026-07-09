@@ -7,6 +7,7 @@
         obtenerFNoticias,
         editarFNoticia,
         eliminarFNoticia,
+        publicarFNoticia,
         modoFormularioNews
 
     } = useNoticias()
@@ -25,12 +26,15 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>titulo</th>
-                        <th>asunto</th>
-                        <th>descripcion</th>
-                        <th>version</th>
-                        <th>imagen</th>
+                        <th>Titulo</th>
+                        <th>Asunto</th>
+                        <th>Descripción</th>
+                        <th>Version</th>
+                        <th>autor_id</th>
+                        <th>autor_nombre</th>
+                        <th>Imagen</th>
                         <th>Fecha de creación</th>
+                        <th>Publicado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -40,6 +44,8 @@
                         <td>{{ noticia.asunto }}</td>
                         <td>{{ noticia.descripcion }}</td>
                         <td>{{ noticia.version }}</td>
+                        <td>{{ noticia.autor_id }}</td>
+                        <td>{{ noticia.autor_nombre }}</td>
                         <td><img 
                         :src="`http://localhost:4000${noticia.imagen}`" 
                         alt="imagen del servidor" 
@@ -47,11 +53,17 @@
                         >
                         </td>
                         <td>{{ noticia.fecha_creacion }}</td>
+                        <td>{{ noticia.publicado }}</td>
                         <td>
-                        <button @click="editarFNoticia(noticia)">Editar</button>
+                            <button @click="editarFNoticia(noticia)">Editar</button>
                         </td>
                         <td>
-                        <button @click="eliminarFNoticia(noticia.id)">Eliminar</button>
+                            <button @click="publicarFNoticia(noticia)">
+                                {{ noticia.publicado ? 'Despublicar' : 'Publicar' }}
+                            </button>
+                        </td>
+                        <td>
+                            <button @click="eliminarFNoticia(noticia.id)">Eliminar</button>
                         </td>
                     </tr>
                 </tbody>

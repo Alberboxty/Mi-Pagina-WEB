@@ -20,6 +20,11 @@ const router = createRouter({
       component: () => import('@/views/noticias/Noticias.vue'),
     },
     {
+      path: '/noticias/:id',
+      name: 'Noticia',
+      component: () => import('@/components/Home/NoticiasAPI/NoticiasAPI.Articulo.vue'),
+    },
+    {
       path: '/perfil',
       name: 'Perfil',
       component: () => import('@/views/Auth/profile/Perfil.vue'),

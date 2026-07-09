@@ -12,6 +12,14 @@ export const obtenerNoticias = async (): Promise<noticias[]> => {
     return res.data
 }
 
+export const obtenerNoticia = async (id: number): Promise<noticias> => {
+    const res = await axios.get(
+        `${API}/${id}`
+        , {withCredentials: true}
+    )
+    return res.data
+}
+
 export const crearNoticia = async ( formData: FormData ): Promise<noticias> => {
     const res = await axios.post(
         API
@@ -32,6 +40,22 @@ export const editarNoticia = async ( id: number, formData: FormData ): Promise<n
 export const eliminarNoticia = async ( id: number ) => {
     const res = await axios.delete(
         `${API}/${id}`
+        , {withCredentials: true}
+    )
+}
+
+export const publicarNoticia = async ( id: number ) => {
+    const res = await axios.patch(
+        `${API}/${id}/publicar`
+        , {}
+        , {withCredentials: true}
+    )
+}
+
+export const despublicarNoticia = async ( id: number ) => {
+    const res = await axios.patch(
+        `${API}/${id}/despublicar`
+        , {}
         , {withCredentials: true}
     )
 }
