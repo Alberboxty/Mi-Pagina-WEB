@@ -49,6 +49,11 @@ const router = createRouter({
       name: 'Authrecovery',
       component: () => import('@/views/Auth/RecoveryAuth.vue'),
     },
+    {
+      path: '/TestEditor',
+      name: 'TestEditor',
+      component: () => import('@/views/Test/Editor.vue'),
+    },
     
   ],
 })

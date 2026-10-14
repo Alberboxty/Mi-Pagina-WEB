@@ -152,7 +152,7 @@ export const actualizarNoticia = async (req: Request, res: Response) => {
             id
         ]
         );
-
+        console.log(rows[0])
         if (rows.length === 0) {
             return res.status(404).json({ ok: false, msg: 'Servidor no encontrado' });
         }
@@ -244,9 +244,10 @@ export const despublicarNoticia = async (req: Request, res: Response) => {
             `UPDATE ${DB_TABLE_NOTICIAS} SET publicado = false WHERE id = $1 RETURNING *`,
             [id]
         );
+        
         if (rows.length === 0) return res.status(404).json({ ok: false, msg: 'Noticia no encontrada' });
         return res.json({ ok: true, noticia: rows[0] });
     } catch (error) {
-        return res.status(500).json({ ok: false, msg: 'Error al publicar la noticia' });
+        return res.status(500).json({ ok: false, msg: 'Error al despublicar la noticia' });
     }
 }

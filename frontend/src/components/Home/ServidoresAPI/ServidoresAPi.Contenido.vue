@@ -59,9 +59,3 @@
         </section>
     </div>
 </template>
-
-<style scoped lang="scss">
-    .contenidos{
-        background-color: rgb(113, 172, 172);
-    }
-</style>

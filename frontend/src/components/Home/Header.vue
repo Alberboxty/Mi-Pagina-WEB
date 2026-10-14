@@ -48,6 +48,7 @@
                     <li class="lista"><RouterLink to="/auth"><p>Auth</p></RouterLink></li>
                     <li class="lista"><RouterLink to="/servidores/Servidores"><p>Servidores</p></RouterLink></li>
                     <li class="lista"><RouterLink to="/noticias"><p>Noticias</p></RouterLink></li>
+                    <li class="lista"><RouterLink to="/TestEditor"><p>Editor Test</p></RouterLink></li>
                     <li class="RRSS">
                         <a href="https://www.instagram.com/lokuraplay/" target="_blank"><InstagramIcon height="25" /></a>
                         <a href="https://discord.gg/Fw8KVbyhMH" target="_blank"><DiscordIcon height="25" /></a>

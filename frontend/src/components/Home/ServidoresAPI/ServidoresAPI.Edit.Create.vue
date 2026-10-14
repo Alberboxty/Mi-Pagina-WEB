@@ -70,13 +70,3 @@
     
   </div>
 </template>
-<style scoped lang="scss">
-  form {
-    background-color: rgb(250, 250, 160);
-  }
-  .vistaprevia{
-    background-color: rgb(121, 139, 118);
-
-  }
-
-</style>

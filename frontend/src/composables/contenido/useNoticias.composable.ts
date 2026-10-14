@@ -20,7 +20,7 @@ const input_Asunto = ref<string>('')
 const input_Descripcion = ref<string>('')
 const input_Version = ref<string>('')
 
-const modoFormularioNews = ref<'crear' | 'editar'>('crear');
+const modoFormularioNews = ref<'Crear' | 'Editar'>('Crear');
 
 const idNewsSeleccionado = ref<number | null>(null);
 
@@ -50,7 +50,7 @@ export function useNoticias() {
         imagenPreview.value = null;
 
         idNewsSeleccionado.value = null;
-        modoFormularioNews.value = 'crear';
+        modoFormularioNews.value = 'Crear';
     };
 
     const obtenerFNoticias = async () => {
@@ -80,7 +80,7 @@ export function useNoticias() {
                     
             // Modo Crear y Editar
 
-            if (modoFormularioNews.value === 'crear') {
+            if (modoFormularioNews.value === 'Crear') {
                 // POST
                 if (!imagenFile.value) {
                     alert('Falta la imagen')
@@ -128,7 +128,7 @@ export function useNoticias() {
 
             // Cambiar modo a editar
             idNewsSeleccionado.value = noticia.id;
-            modoFormularioNews.value = 'editar';
+            modoFormularioNews.value = 'Editar';
         } catch (error){
             console.error('Error al editar el formulario', error);
         }
