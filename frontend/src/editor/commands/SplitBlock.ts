@@ -1,12 +1,26 @@
 import type { Editor } from "../core/Editor"
 import type { Block } from "../model/Block";
+import { isSelectionCollapsed } from "../model/SelectionUtils";
 
 export function splitBlock(editor: Editor): void {
-    const document = editor.getDocument();
-    const selection = editor.getSelection();
+    let document = editor.getDocument();
+    let selection = editor.getSelection();
 
     if (!selection) {
         return;
+    }
+
+    // Si hay texto seleccionado, primero se borra y luego se divide
+    // en el cursor resultante.
+    if (!isSelectionCollapsed(selection)) {
+        editor.commands.insertText("");
+
+        document = editor.getDocument();
+        selection = editor.getSelection();
+
+        if (!selection) {
+            return;
+        }
     }
 
     const blockId = selection.anchor.blockId;
@@ -89,6 +103,4 @@ export function splitBlock(editor: Editor): void {
         },
         newSelection
     );
-
-    console.log("[SplitBlock] Nueva selección:", editor.getSelection());
 }

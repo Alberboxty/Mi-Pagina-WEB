@@ -7,7 +7,7 @@ function getParagraph(node: Node | null): HTMLElement | null {
             ? node
             : node?.parentElement;
 
-    return element?.closest("p[data-block-id]") ?? null;
+    return element?.closest("[data-block-id]") ?? null;
 }
 
 function getAbsoluteOffset(
@@ -108,7 +108,7 @@ function positionToAbsoluteOffset(
 function getDomPoint(
     paragraph: HTMLElement,
     absoluteOffset: number
-): { node: Text; offset: number } | null {
+): { node: Node; offset: number } | null {
     const walker = document.createTreeWalker(
         paragraph,
         NodeFilter.SHOW_TEXT
@@ -121,10 +121,9 @@ function getDomPoint(
         textNodes.push(currentNode as Text);
     }
 
+    // Bloque vacío (solo contiene <br>): el cursor va en el propio bloque.
     if (textNodes.length === 0) {
-        const textNode = document.createTextNode("");
-        paragraph.appendChild(textNode);
-        textNodes.push(textNode);
+        return { node: paragraph, offset: 0 };
     }
 
     let remainingOffset = Math.max(0, absoluteOffset);
@@ -258,12 +257,12 @@ export function useEditorSelection(editor: Editor) {
             return;
         }
 
-        const anchorParagraph = editorElement.querySelector<HTMLParagraphElement>(
-            `p[data-block-id="${CSS.escape(selection.anchor.blockId)}"]`
+        const anchorParagraph = editorElement.querySelector<HTMLElement>(
+            `[data-block-id="${CSS.escape(selection.anchor.blockId)}"]`
         );
 
-        const focusParagraph = editorElement.querySelector<HTMLParagraphElement>(
-            `p[data-block-id="${CSS.escape(selection.focus.blockId)}"]`
+        const focusParagraph = editorElement.querySelector<HTMLElement>(
+            `[data-block-id="${CSS.escape(selection.focus.blockId)}"]`
         );
 
         if (!anchorParagraph || !focusParagraph) {

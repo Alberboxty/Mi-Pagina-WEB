@@ -1,6 +1,11 @@
 import type { Document } from "../model/Document";
 import type { Selection } from "../model/Selection";
 
+import type { Schema } from "../schema/Schema";
+import { defaultSchema } from "../schema/defaultSchema";
+
+import { validateDocument, type ValidationResult } from "../model/validateDocument";
+
 import { History } from "./History"
 import { EditorState } from "./EditorState"
 import { Transaction } from "./Transaction"
@@ -19,7 +24,10 @@ export class Editor {
 
     public readonly commands: Commands;
 
-    constructor(document?: Document) {
+    private readonly schema: Schema;
+
+    constructor(document?: Document, schema: Schema = defaultSchema) {
+        this.schema = schema;
 
         const initialDocument: Document = document ?? {
             version: 1,
@@ -29,10 +37,14 @@ export class Editor {
         this.state = new EditorState(initialDocument);
         this.history = new History();
 
-        this.renderer = new HtmlRenderer();
+        this.renderer = new HtmlRenderer(schema);
 
         this.commands = new Commands(this);
 
+    }
+
+    public getSchema(): Schema {
+        return this.schema;
     }
 
     /**
@@ -67,6 +79,32 @@ export class Editor {
      */
     public setDocument(document: Document): void {
         this.applyDocument(document);
+    }
+
+    public loadDocument(input: unknown): ValidationResult {
+        const result = validateDocument(input, this.schema);
+
+        if (!result.ok) {
+            return result;
+        }
+        this.state.setDocument(result.document);
+        this.state.setSelection(null);
+        this.history.clear();
+
+        this.notify();
+        return result;
+    }
+
+    public toJSON(): Document {
+        const result = validateDocument(this.state.getDocument(), this.schema);
+
+        if (!result.ok) {
+            throw new Error(
+                "El documento no es válido: " + result.errors.join("; ")
+            );
+        }
+
+        return result.document;
     }
 
     /**

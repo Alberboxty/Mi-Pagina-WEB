@@ -1,50 +1,49 @@
 import type { Document } from "../model/Document";
+import type { Inline } from "../model/Inline";
 import type { Renderer } from "./Renderer";
+import type { Schema } from "../schema/Schema";
+import { defaultSchema } from "../schema/defaultSchema";
+import { escapeHtml } from "../schema/escapeHtml";
 
 export class HtmlRenderer implements Renderer {
 
-    private escapeHtml(text: string): string {
-        return text
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#039;");
+    constructor(private readonly schema: Schema = defaultSchema) {}
+
+    private renderInline(inline: Inline): string {
+        let content = escapeHtml(inline.text);
+
+        for (const spec of this.schema.markSpecs) {
+            if (inline.marks.some(mark => mark.type === spec.name)) {
+                content = spec.render(content);
+            }
+        }
+
+        return content;
     }
 
     public render(document: Document): string {
         return document.blocks
             .map(block => {
-                if (block.type === "paragraph") {
-                    const content = block.children
-                        .map(inline => {
-                            const text = this.escapeHtml(inline.text);
+                const spec = this.schema.getBlock(block.type);
 
-                            let content = text
+                // Bloque que el esquema no conoce: no se pinta.
+                if (!spec) {
+                    return "";
+                }
 
-                            if (inline.marks.some(mark => mark.type === "italic")) {
-                                content = `<em>${content}</em>`;
-                            }
+                // Un bloque sin texto necesita un <br> para tener altura
+                // y poder alojar el cursor.
+                const isEmpty = block.children.every(
+                    inline => inline.text.length === 0
+                );
 
-                            if (inline.marks.some(mark => mark.type === "bold")) {
-                                content = `<strong>${content}</strong>`;
-                            }
-
-                            if (inline.marks.some(mark => mark.type === "underline")) {
-                                content = `<u>${content}</u>`;
-                            }
-
-                            if (inline.marks.some(mark => mark.type === "strikethrough")) {
-                                content = `<s>${content}</s>`;
-                            }
-
-                            return content;
-                        })
+                const content = isEmpty
+                    ? "<br>"
+                    : block.children
+                        .map(inline => this.renderInline(inline))
                         .join("");
 
-                    return `<p data-block-id="${block.id}">${content}</p>`;
-                }
-                return "";
+                return spec.render(content, block);
             })
             .join("");
     }

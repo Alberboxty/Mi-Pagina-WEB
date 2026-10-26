@@ -828,4 +828,50 @@ describe("Editor", () => {
 
         expect(html).toBe('<p data-block-id="1">Hola mundo</p>');
     });
+
+    it("loadDocument no deja nada en el historial", () => {
+        const editor = new Editor();
+
+        editor.loadDocument({
+            version: 1,
+            blocks: [
+                {
+                    id: "block-1",
+                    type: "paragraph",
+                    children: [{ text: "Hola", marks: [] }]
+                }
+            ]
+        });
+
+        expect(editor.canUndo()).toBe(false);
+        expect(editor.canRedo()).toBe(false);
+        expect(editor.getSelection()).toBeNull();
+    });
+
+    it("loadDocument rechaza un documento malicioso y no cambia nada", () => {
+        const editor = new Editor();
+
+        const result = editor.loadDocument({
+            version: 1,
+            blocks: [
+                { id: 'x" onmouseover="alert(1)', type: "paragraph", children: [] }
+            ]
+        });
+
+        expect(result.ok).toBe(false);
+        expect(editor.getDocument().blocks).toHaveLength(0);
+    });
+
+    it("toJSON devuelve el documento validado", () => {
+        const editor = new Editor();
+
+        editor.loadDocument({
+            version: 1,
+            blocks: [
+                { id: "b1", type: "paragraph", children: [{ text: "Hola", marks: [] }] }
+            ]
+        });
+
+        expect(JSON.parse(JSON.stringify(editor)).blocks[0].id).toBe("b1");
+    });
 });

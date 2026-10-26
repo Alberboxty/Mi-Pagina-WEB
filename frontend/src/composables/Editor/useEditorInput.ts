@@ -29,6 +29,7 @@ export function useEditorInput(editor: Editor) {
     function handleBeforeInput(event: InputEvent) {
         switch (event.inputType) {
             case "insertParagraph":
+            case "insertLineBreak": // Shift+Enter: por ahora igual que Enter
                 event.preventDefault();
                 return run(() => editor.commands.splitBlock());
 
@@ -50,12 +51,27 @@ export function useEditorInput(editor: Editor) {
             }
 
             case "deleteContentBackward":
+            case "deleteWordBackward": // por ahora borra un carácter
                 event.preventDefault();
                 return run(() => editor.commands.backspace());
 
             case "deleteContentForward":
+            case "deleteWordForward": // por ahora borra un carácter
                 event.preventDefault();
                 return run(() => editor.commands.deleteForward());
+
+            // Ctrl+X: con selección activa, insertText("") la borra.
+            case "deleteByCut":
+                event.preventDefault();
+                return run(() => editor.commands.insertText(""));
+
+            // Sin soporte por ahora: se bloquean para que el DOM
+            // no se desincronice del modelo.
+            case "insertFromDrop":
+            case "deleteByDrag":
+            case "insertReplacementText":
+                event.preventDefault();
+                return;
 
             // Ctrl+B / Ctrl+I / Ctrl+U: sin esto el navegador aplica el
             // formato por su cuenta y se desincroniza igual que el pegado.
