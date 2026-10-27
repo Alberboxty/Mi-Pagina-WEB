@@ -69,6 +69,16 @@
                 border-color: #9ca3af;
             }
         }
+        .editor-view :deep(ul), .editor-view :deep(ol) {
+            margin: 0;
+            padding-left: 1.5rem;
+        }
+
+        .editor-view :deep(li.level-1) { margin-left: 1.5rem; }
+        .editor-view :deep(li.level-2) { margin-left: 3rem; }
+        .editor-view :deep(li.level-3) { margin-left: 4.5rem; }
+        .editor-view :deep(li.level-4) { margin-left: 6rem; }
+        .editor-view :deep(li.level-5) { margin-left: 7.5rem; }
 
     }
 

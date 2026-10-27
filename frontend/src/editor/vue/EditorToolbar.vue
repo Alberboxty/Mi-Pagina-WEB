@@ -184,6 +184,23 @@
         refreshToolbar();
     }
 
+    // Los botones de lista solo aparecen si el esquema los permite.
+    const hasLists = props.editor.getSchema().hasBlock("list-item");
+
+    async function applyList(ordered: boolean): Promise<void> {
+        updateSelection();
+
+        if (ordered) {
+            props.editor.commands.orderedList();
+        } else {
+            props.editor.commands.bulletList();
+        }
+
+        await nextTick();
+        restoreSelection();
+        refreshToolbar();
+    }
+
     onMounted(() => {
         unsubscribe = props.editor.subscribe(refreshToolbar);
 
@@ -282,6 +299,31 @@
         >
             <s>S</s>
         </button>
+
+        <template v-if="hasLists">
+
+            <span class="separator" aria-hidden="true"></span>
+
+            <button
+                type="button"
+                title="Lista con viñetas"
+                aria-label="Lista con viñetas"
+                @mousedown.prevent
+                @click="applyList(false)"
+            >
+                •
+            </button>
+
+            <button
+                type="button"
+                title="Lista numerada"
+                aria-label="Lista numerada"
+                @mousedown.prevent
+                @click="applyList(true)"
+            >
+                1.
+            </button>
+        </template>
     </div>
 </template>
 

@@ -10,6 +10,8 @@ import {italic} from "./Italic";
 import {underline} from "./Underline";
 import {strikethrough} from "./Strikethrough";
 import { deleteForward } from "./Delete";
+import { toggleList } from "./ToggleList";
+import { indent, outdent } from "./Indent";
 
 export class Commands {
     constructor(private editor: Editor) {}
@@ -50,5 +52,21 @@ export class Commands {
 
     strikethrough(): void {
         strikethrough(this.editor);
+    }
+
+    bulletList(): void {
+        toggleList(this.editor, false);
+    }
+
+    orderedList(): void {
+        toggleList(this.editor, true);
+    }
+
+    indent(): boolean {
+        return indent(this.editor);
+    }
+
+    outdent(): boolean {
+        return outdent(this.editor);
     }
 }
