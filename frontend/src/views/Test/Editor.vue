@@ -3,6 +3,8 @@
 
     import EditorView from '@/editor/vue/EditorView.vue';
 
+    import { listsSchema } from '@/editor/schema/defaultSchema';
+
     const editor = new Editor({
         version: 1,
         blocks: [
@@ -18,7 +20,7 @@
                 attributes: {}
             }
         ]
-    });
+    }, listsSchema);
 
 </script>
 
