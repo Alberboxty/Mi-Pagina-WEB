@@ -22,29 +22,50 @@ export class HtmlRenderer implements Renderer {
     }
 
     public render(document: Document): string {
-        return document.blocks
-            .map(block => {
-                const spec = this.schema.getBlock(block.type);
+        let html = "";
+        let openWrapper: { key: string; close: string } | null = null;
 
-                // Bloque que el esquema no conoce: no se pinta.
-                if (!spec) {
-                    return "";
-                }
+        for (const block of document.blocks) {
+            const spec = this.schema.getBlock(block.type);
 
-                // Un bloque sin texto necesita un <br> para tener altura
-                // y poder alojar el cursor.
-                const isEmpty = block.children.every(
-                    inline => inline.text.length === 0
-                );
+            // Bloque que el esquema no conoce: no se pinta.
+            if (!spec) {
+                continue;
+            }
 
-                const content = isEmpty
-                    ? "<br>"
-                    : block.children
-                        .map(inline => this.renderInline(inline))
-                        .join("");
+            const wrapper = spec.wrapper?.(block) ?? null;
 
-                return spec.render(content, block);
-            })
-            .join("");
+            // Cambia el contenedor: se cierra el anterior.
+            if (openWrapper && openWrapper.key !== wrapper?.key) {
+                html += openWrapper.close;
+                openWrapper = null;
+            }
+
+            // Se abre un contenedor nuevo si hace falta.
+            if (wrapper && !openWrapper) {
+                html += wrapper.open;
+                openWrapper = { key: wrapper.key, close: wrapper.close };
+            }
+
+            // Un bloque sin texto necesita un <br> para tener altura
+            // y poder alojar el cursor.
+            const isEmpty = block.children.every(
+                inline => inline.text.length === 0
+            );
+
+            const content = isEmpty
+                ? "<br>"
+                : block.children
+                    .map(inline => this.renderInline(inline))
+                    .join("");
+
+            html += spec.render(content, block);
+        }
+
+        if (openWrapper) {
+            html += openWrapper.close;
+        }
+
+        return html;
     }
 }
