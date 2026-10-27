@@ -26,6 +26,19 @@ export function useEditorInput(editor: Editor) {
         return run(() => editor.redo(), false);
     }
 
+    function isSelectionInList(): boolean {
+        updateSelection();
+
+        const selection = editor.getSelection();
+        if (!selection) return false;
+
+        const block = editor
+            .getDocument()
+            .blocks.find(b => b.id === selection.anchor.blockId);
+
+        return block?.type === "list-item";
+    }
+
     function handleBeforeInput(event: InputEvent) {
         switch (event.inputType) {
             case "insertParagraph":
@@ -98,6 +111,17 @@ export function useEditorInput(editor: Editor) {
     }
 
     function handleKeyDown(event: KeyboardEvent) {
+        if (event.key === "Tab" && !event.ctrlKey && !event.metaKey && !event.altKey) {
+            const inList = isSelectionInList();
+
+            // Fuera de una lista, Tab sigue moviendo el foco (accesibilidad).
+            if (!inList) return;
+
+            event.preventDefault();
+            run(() => (event.shiftKey ? editor.commands.outdent() : editor.commands.indent()));
+            return;
+        }
+
         if (!(event.ctrlKey || event.metaKey) || event.altKey) return;
 
         const key = event.key.toLowerCase();

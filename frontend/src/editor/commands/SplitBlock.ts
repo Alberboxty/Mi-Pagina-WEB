@@ -35,6 +35,28 @@ export function splitBlock(editor: Editor): void {
 
     const block = document.blocks[blockIndex];
 
+    // Enter en un ítem de lista vacío: sale de la lista.
+    const isEmptyListItem =
+        block.type === "list-item" &&
+        block.children.every(inline => inline.text.length === 0);
+
+    if (isEmptyListItem) {
+        const exitBlocks = [...document.blocks];
+
+        exitBlocks[blockIndex] = {
+            ...block,
+            type: "paragraph",
+            attributes: {}
+        };
+
+        editor.applyDocument(
+            { ...document, blocks: exitBlocks },
+            selection
+        );
+
+        return;
+    }
+
     const inlineIndex = selection.anchor.inlineIndex;
     const offset = selection.anchor.offset;
 

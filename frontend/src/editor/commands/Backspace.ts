@@ -30,6 +30,30 @@ export function backspace(editor: Editor): void {
     const offset = selection.anchor.offset;
     const inlineIndex = selection.anchor.inlineIndex;
 
+    // Backspace al inicio de un ítem de lista: lo convierte en párrafo.
+    const listBlock = document.blocks[blockIndex];
+
+    if (
+        listBlock.type === "list-item" &&
+        offset === 0 &&
+        inlineIndex === 0
+    ) {
+        const listBlocks = [...document.blocks];
+
+        listBlocks[blockIndex] = {
+            ...listBlock,
+            type: "paragraph",
+            attributes: {}
+        };
+
+        editor.applyDocument(
+            { ...document, blocks: listBlocks },
+            selection
+        );
+
+        return;
+    }
+
     if(offset === 0 && inlineIndex > 0) {
         const block = document.blocks[blockIndex];
         const previousInline = block.children[inlineIndex - 1];
