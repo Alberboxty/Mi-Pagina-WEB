@@ -13,8 +13,10 @@ export class HtmlRenderer implements Renderer {
         let content = escapeHtml(inline.text);
 
         for (const spec of this.schema.markSpecs) {
-            if (inline.marks.some(mark => mark.type === spec.name)) {
-                content = spec.render(content);
+            const mark = inline.marks.find(m => m.type === spec.name);
+
+            if (mark) {
+                content = spec.render(content, mark.attributes ?? {});
             }
         }
 

@@ -3,12 +3,16 @@
 <script setup lang="ts">
     import { useNoticias } from '@/composables/contenido/useNoticias.composable';
 
+    import EditorView from '@/editor/vue/EditorView.vue';
+
     const {
         modoFormularioNews,
         imagenPreview,
         input_Titulo,
         input_Asunto,
-        input_Descripcion,
+        editor,
+        descripcionHtml,
+        descripcionError,
         input_Version,
         onFileChange,
         enviarFNoticia,
@@ -42,12 +46,9 @@
             <input id="version" type="text" v-model="input_Version" placeholder="Versión">
           </div>
           <div class="field full">
-            <label for="description">Descripción</label>
-            <textarea id="description" type="text" v-model="input_Descripcion" placeholder="Descripción"></textarea>
-            <div class="EditorDeTexto">
-              <button style="padding: 5px 8px;"><b>B</b></button>
-              <button style="padding: 5px 8px;"><i>I</i></button>
-            </div>
+            <label>Descripción</label>
+            <EditorView :editor="editor" :show-preview="false" />
+            <p v-if="descripcionError" role="alert">{{ descripcionError }}</p>
           </div>
           <div class="field full">
             <label for="imagen">Imagen</label>
@@ -76,7 +77,7 @@
             <p>fecha</p>
           </div>
           
-          <p class="description">descripcion: {{ input_Descripcion }}</p>
+          <div class="description" v-html="descripcionHtml"></div>
 
         </div>
         

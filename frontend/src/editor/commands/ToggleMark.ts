@@ -11,7 +11,7 @@ import { getOrderedSelection } from "../model/SelectionUtils";
  * en el nuevo documento, teniendo en cuenta que un Inline puede haberse
  * dividido en varios fragmentos.
  */
-function mapPositionToDocument(
+export function mapPositionToDocument(
     before: Document,
     after: Document,
     position: Position

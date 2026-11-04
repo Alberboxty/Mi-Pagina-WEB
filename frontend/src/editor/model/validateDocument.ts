@@ -173,6 +173,20 @@ export function validateDocument(
                     return;
                 }
 
+                const markSpec = schema.getMark(rawMark.type);
+
+                if (markSpec?.validateAttributes) {
+                    const validated = markSpec.validateAttributes(rawMark.attributes);
+
+                    if (validated === null) {
+                        fail(`${mp}.attributes`, "atributos no válidos");
+                        return;
+                    }
+
+                    cleanMarks.push({ type: rawMark.type, attributes: validated });
+                    return;
+                }
+
                 if (!isEmptyOrAbsent(rawMark.attributes)) {
                     fail(`${mp}.attributes`, "no se permiten atributos");
                     return;

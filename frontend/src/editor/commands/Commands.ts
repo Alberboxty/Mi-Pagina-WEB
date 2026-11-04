@@ -13,6 +13,9 @@ import { deleteForward } from "./Delete";
 import { toggleList } from "./ToggleList";
 import { indent, outdent } from "./Indent";
 
+import type { Selection } from "../model/Selection";
+import { setLink, removeLink } from "./Link";
+
 export class Commands {
     constructor(private editor: Editor) {}
 
@@ -68,5 +71,13 @@ export class Commands {
 
     outdent(): boolean {
         return outdent(this.editor);
+    }
+
+    setLink(url: string, selection?: Selection | null): boolean {
+        return setLink(this.editor, url, selection ?? this.editor.getSelection());
+    }
+
+    removeLink(selection?: Selection | null): boolean {
+        return removeLink(this.editor, selection ?? this.editor.getSelection());
     }
 }

@@ -24,6 +24,13 @@
         handleKeyDown
     } = useEditorInput(props.editor);
 
+    function onViewClick(event: MouseEvent) {
+        // Dentro del editor, los enlaces no navegan: así se pueden seleccionar y editar.
+        if ((event.target as HTMLElement).closest("a")) {
+            event.preventDefault();
+        }
+    }
+
     onMounted(() => {
         unsubscribe = props.editor.subscribe(() => {
             html.value = props.editor.render();
@@ -48,7 +55,13 @@
             @mouseup="updateSelection"
             @keydown="handleKeyDown"
             @beforeinput="handleBeforeInput"
+            @click="onViewClick"
         ></div>
+
+        <section class="editor-preview" aria-label="Vista previa">
+            <h3 class="editor-preview-title">Vista previa</h3>
+            <div class="editor-preview-content" v-html="html"></div>
+        </section>
     </div>
 </template>
 

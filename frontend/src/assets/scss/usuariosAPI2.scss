@@ -1,0 +1,31 @@
+.usuarios {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    .editarUsuarios{
+        background-color: rgb(119, 209, 200);
+        position: absolute;
+        top: 0px;
+        right: 300px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 20px;
+        border-radius: 10px;
+        .titulo {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            i {
+                cursor: pointer;
+            }
+        }
+        .field{
+            display: flex;
+            flex-direction: row;
+            gap: 8px;
+        }
+    }
+}

@@ -1,6 +1,12 @@
-import { ref } from 'vue'
+import { onUnmounted, ref } from 'vue'
 
 import type { noticias } from '@/types/noticias.types'
+
+import { Editor } from "@/editor/core/Editor";
+import { richSchema } from "@/editor/schema/defaultSchema";
+import { createEmptyDocument, textToDocument } from "@/editor/model/documents";
+
+
 
 import {
     obtenerNoticias,
@@ -17,7 +23,44 @@ const imagenPreview = ref<string | null>(null)
 
 const input_Titulo = ref<string>('')
 const input_Asunto = ref<string>('')
-const input_Descripcion = ref<string>('')
+
+
+
+const descripcionError = ref("");
+
+const editor = new Editor(createEmptyDocument(), richSchema);
+
+// editor.render() no es reactivo: se copia a un ref al suscribirse.
+const descripcionHtml = ref(editor.render());
+editor.subscribe(() => {
+    descripcionHtml.value = editor.render();
+});
+
+
+/** Carga la descripción de una noticia existente (JSON nuevo o texto antiguo). */
+function cargarDescripcion(valor: unknown): void {
+    const result = editor.loadDocument(
+        typeof valor === "string" ? textToDocument(valor) : valor
+    );
+
+    descripcionError.value = result.ok ? "" : "La descripción guardada no es válida.";
+}
+
+/** Devuelve el documento limpio para enviar, o null si no es válido. */
+function obtenerDescripcion() {
+    try {
+        return editor.toJSON();
+    } catch {
+        descripcionError.value = "La descripción no es válida.";
+        return null;
+    }
+}
+
+function resetDescripcion(): void {
+    editor.loadDocument(createEmptyDocument());
+    descripcionError.value = "";
+}
+
 const input_Version = ref<string>('')
 
 const modoFormularioNews = ref<'Crear' | 'Editar'>('Crear');
@@ -44,11 +87,10 @@ export function useNoticias() {
     const resetNewsFormulario = () => {
         input_Titulo.value = '';
         input_Asunto.value = '';
-        input_Descripcion.value = '';
         input_Version.value = '';
         imagenFile.value = null;
         imagenPreview.value = null;
-
+        resetDescripcion();
         idNewsSeleccionado.value = null;
         modoFormularioNews.value = 'Crear';
     };
@@ -72,10 +114,14 @@ export function useNoticias() {
     const enviarFNoticia = async() => {
         try {
             const formData = new FormData();
+            const descripcion = obtenerDescripcion();
+
+            if (!descripcion) return;
+
             if (imagenFile.value) formData.append('imagen', imagenFile.value);
             formData.append('titulo', input_Titulo.value);
             formData.append('asunto', input_Asunto.value);
-            formData.append('descripcion', input_Descripcion.value);
+            formData.append('descripcion', JSON.stringify(descripcion));
             formData.append('version', input_Version.value);
                     
             // Modo Crear y Editar
@@ -121,7 +167,7 @@ export function useNoticias() {
             imagenFile.value = null; // Solo si quiere reemplazar
             input_Titulo.value = noticia.titulo;
             input_Asunto.value = noticia.asunto;
-            input_Descripcion.value = noticia.descripcion;
+            cargarDescripcion(noticia.descripcion);
             input_Version.value = noticia.version;
             
             
@@ -178,16 +224,20 @@ export function useNoticias() {
 
     }
 
+    
+
     return {
         imagenPreview,
         input_Titulo,
         input_Asunto,
-        input_Descripcion,
         input_Version,
         modoFormularioNews,
         idNewsSeleccionado,
         noticias,
         noticiasID,
+        editor,
+        descripcionHtml,
+        descripcionError,
         onFileChange,
         resetNewsFormulario,
         obtenerFNoticias,

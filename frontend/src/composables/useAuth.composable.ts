@@ -4,7 +4,7 @@ import { useRouter } from 'vue-router'
 import {
     logearseAPI,
     registrarseAPI,
-    obtenerPerfilAPI,
+    // obtenerPerfilAPI,
     logoutAPI,
     adminDataAPI,
     forgottenPassAPI
@@ -63,14 +63,14 @@ export function useAuth() {
     
     }
 
-    const obtenerPerfil = async () => {
-        try {
-            const res = await obtenerPerfilAPI();
-            console.log( res.email )
-        } catch (error: any) {
-            console.error("Error", error?.response?.data.msg);
-        }
-    }
+    // const obtenerPerfil = async () => {
+    //     try {
+    //         const res = await obtenerPerfilAPI();
+    //         console.log( res.email )
+    //     } catch (error: any) {
+    //         console.error("Error", error?.response?.data.msg);
+    //     }
+    // }
 
     const logout = async () => {
         try {
@@ -125,9 +125,9 @@ export function useAuth() {
         successForgotten,
         logearse,
         registrarse,
-        obtenerPerfil,
+        // obtenerPerfil,
         logout,
-        adminData,
+        // adminData,
         forgottenPass
     }
 }

@@ -3,6 +3,7 @@
 
     import type { Editor } from '../core/Editor';
     import type { Inline } from '../model/Inline';
+    import type { Selection } from '../model/Selection';
 
     import { getOrderedSelection } from '../model/SelectionUtils';
     import { toggleMark } from '../commands/ToggleMark';
@@ -201,6 +202,67 @@
         refreshToolbar();
     }
 
+    // Enlaces: el botón solo aparece si el esquema incluye la marca link.
+    const hasLinks = props.editor.getSchema().hasMark("link");
+
+    const showLinkForm = ref(false);
+    const linkUrl = ref("");
+    const linkError = ref("");
+    const linkInput = ref<HTMLInputElement | null>(null);
+
+    // Al hacer clic en el campo, el navegador pierde la selección del editor.
+    // Por eso se guarda la del modelo al abrir el formulario y se usa al aplicar.
+    let savedSelection: Selection | null = null;
+
+    async function openLinkForm(): Promise<void> {
+        updateSelection();
+
+        const current = props.editor.getSelection();
+
+        if (!current) return;
+
+        savedSelection = {
+            anchor: { ...current.anchor },
+            focus: { ...current.focus }
+        };
+
+        linkUrl.value = "https://";
+        linkError.value = "";
+        showLinkForm.value = true;
+
+        await nextTick();
+        linkInput.value?.focus();
+    }
+
+    function closeLinkForm(): void {
+        showLinkForm.value = false;
+        linkError.value = "";
+    }
+
+    async function submitLink(): Promise<void> {
+        const ok = props.editor.commands.setLink(linkUrl.value, savedSelection);
+
+        if (!ok) {
+            linkError.value = "URL no válida o sin texto seleccionado (solo http, https o mailto).";
+            return;
+        }
+
+        closeLinkForm();
+
+        await nextTick();
+        restoreSelection();
+        refreshToolbar();
+    }
+
+    async function unlink(): Promise<void> {
+        updateSelection();
+        props.editor.commands.removeLink();
+
+        await nextTick();
+        restoreSelection();
+        refreshToolbar();
+    }
+
     onMounted(() => {
         unsubscribe = props.editor.subscribe(refreshToolbar);
 
@@ -301,7 +363,6 @@
         </button>
 
         <template v-if="hasLists">
-
             <span class="separator" aria-hidden="true"></span>
 
             <button
@@ -324,12 +385,52 @@
                 1.
             </button>
         </template>
+
+        <template v-if="hasLinks">
+            <span class="separator" aria-hidden="true"></span>
+
+            <button
+                type="button"
+                title="Añadir enlace"
+                aria-label="Añadir enlace"
+                @mousedown.prevent
+                @click="openLinkForm"
+            >
+                🔗
+            </button>
+
+            <button
+                type="button"
+                title="Quitar enlace"
+                aria-label="Quitar enlace"
+                @mousedown.prevent
+                @click="unlink"
+            >
+                ⛓
+            </button>
+
+            <div v-if="showLinkForm" class="link-form">
+                <input
+                    ref="linkInput"
+                    v-model="linkUrl"
+                    type="url"
+                    placeholder="https://..."
+                    aria-label="URL del enlace"
+                    @keydown.enter.prevent="submitLink"
+                    @keydown.esc.prevent="closeLinkForm"
+                />
+                <button type="button" class="text-button" @click="submitLink">Aplicar</button>
+                <button type="button" class="text-button" @click="closeLinkForm">Cancelar</button>
+                <span v-if="linkError" class="link-error" role="alert">{{ linkError }}</span>
+            </div>
+        </template>
     </div>
 </template>
 
 <style scoped lang="scss">
     .editor-toolbar {
         display: flex;
+        flex-wrap: wrap;
         align-items: center;
         gap: 4px;
         padding: 8px;
@@ -342,6 +443,33 @@
             height: 20px;
             margin: 0 4px;
             background: #d1d5db;
+        }
+
+        .link-form {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-basis: 100%;
+            margin-top: 4px;
+
+            input {
+                flex: 1;
+                min-width: 0;
+                padding: 6px 8px;
+                border: 1px solid #d1d5db;
+                border-radius: 5px;
+            }
+
+            .text-button {
+                width: auto;
+                padding: 0 10px;
+                font-size: 14px;
+            }
+
+            .link-error {
+                color: #b91c1c;
+                font-size: 13px;
+            }
         }
 
         button {

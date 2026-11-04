@@ -3,24 +3,21 @@
 
 <!-- Los iconos vienen de https://primevue.org/icons/ -->
 <script setup lang="ts">
-    import { onMounted } from 'vue'
     import {ref} from 'vue'
     const headerMenuIsActive = ref(false)
     import { useAuth } from '@/composables/useAuth.composable';
     import { user } from '@/api/auth.api';
+    import { useRoute } from 'vue-router';
+
+    const route = useRoute();
 
     // iconos de https://icon-sets.iconify.design/
     import InstagramIcon from '@iconify-vue/skill-icons/instagram';
     import DiscordIcon from '@iconify-vue/skill-icons/discord';
 
     const {
-        obtenerPerfil,
         logout
     } = useAuth()
-    
-    onMounted(() => {
-        obtenerPerfil();
-    });
 </script>
 <template>
     <header>
@@ -28,6 +25,9 @@
         <nav>
             <div class="flechaizquierda"></div>
             <article class="inicio">
+                <button v-if="route.path === '/admin'">
+                    Menu
+                </button>
                 <RouterLink to="/"><i alt="Inicio" class="pi pi-home" /></RouterLink>
                 <img class="logo" src="" alt="Logo">
                 <i class="pi pi-bars" @click="headerMenuIsActive = !headerMenuIsActive"/>
@@ -37,11 +37,15 @@
                 <ul :class="{ ulmenu: headerMenuIsActive }">
                     <li class="Perfil">
                         <div>
-                            <RouterLink to="/perfil"><i class="pi pi-user"></i></RouterLink>
+                            <RouterLink to="/perfil">
+                                <i class="pi pi-user"></i>
+                            </RouterLink>
                         </div>
                         <div>
-                            <RouterLink to="/perfil"><p>{{ user?.username || "Inicia Sesión" }}</p></RouterLink>
-                            <button @click="logout">Cerrar Sesión</button>
+                            <RouterLink :to="user ? '/perfil' : '/auth'">
+                                <p>{{ user?.username || "Inicia Sesión" }}</p>
+                            </RouterLink>
+                            <button v-if="user" @click="logout">Cerrar Sesión</button>
                         </div>
                     </li>
                     <li class="lista"><RouterLink to="/admin"><p>Panel Control</p></RouterLink></li>

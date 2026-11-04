@@ -1,20 +1,10 @@
-<script setup lang="ts">
-    import { onMounted } from 'vue'
-    
+<script setup lang="ts">    
     import ServidoresAPIEditCreate from '@/components/Home/ServidoresAPI/ServidoresAPI.Edit.Create.vue';
     import ServidoresAPIContenido from '@/components/Home/ServidoresAPI/ServidoresAPi.Contenido.vue';
     import ServidoresAPIArticulos from '@/components/Home/ServidoresAPI/ServidoresApi.Articulos.vue';
-    import { useAuth } from '@/composables/useAuth.composable';
+    // import { useAuth } from '@/composables/useAuth.composable';
 
     import { user } from '@/api/auth.api';
-
-    const {
-        obtenerPerfil,
-    } = useAuth()
-
-    onMounted(() => {
-        obtenerPerfil();
-    });
 </script>
 
 <template>

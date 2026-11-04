@@ -1,0 +1,21 @@
+.AdminPannel{
+    position: relative;
+    aside{
+        //Caja width 280 + 20px de padding = 300px
+        width: 280px;
+        position: absolute;
+        right: 0;
+        background-color: rgb(252, 96, 96);
+        padding: 10px 20px;
+        nav {
+            .TitleAside{
+                display: flex;
+                flex-direction: row;
+            }
+        }
+    }
+    main{
+        margin-top: 100px;
+        background-color: greenyellow;
+    }
+}

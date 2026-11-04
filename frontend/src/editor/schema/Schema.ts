@@ -3,7 +3,14 @@ import type { Block } from "../model/Block";
 export interface MarkSpec {
     name: string;
     /** Envuelve el contenido ya escapado. */
-    render: (inner: string) => string;
+    /**
+     * Valida los atributos de una marca que no son de fiar.
+     * Devuelve una copia limpia o null si no son válidos.
+     * Si no se define, la marca solo admite atributos vacíos.
+     */
+    validateAttributes?: (raw: unknown) => Record<string, unknown> | null;
+    /** Envuelve el contenido ya escapado. */
+    render: (inner: string, attributes: Record<string, unknown>) => string;
 }
 
 export interface BlockSpec {
@@ -16,6 +23,11 @@ export interface BlockSpec {
     validateAttributes?: (raw: unknown) => Record<string, unknown> | null;
     /** Recibe el contenido de los inlines ya renderizado y escapado. */
     render: (content: string, block: Block) => string;
+        /**
+     * Si se define, los bloques consecutivos con la misma `key` se pintan
+     * dentro de un único contenedor (por ejemplo <ul>...</ul>).
+     */
+    wrapper?: (block: Block) => { key: string; open: string; close: string } | null;
 }
 
 export interface SchemaConfig {
@@ -48,6 +60,10 @@ export class Schema {
 
     public getBlock(name: string): BlockSpec | undefined {
         return this.blocks.get(name);
+    }
+
+    public getMark(name: string): MarkSpec | undefined {
+        return this.marks.get(name);
     }
 
     /** Marcas en el orden en que se declararon (de dentro hacia fuera al pintar). */

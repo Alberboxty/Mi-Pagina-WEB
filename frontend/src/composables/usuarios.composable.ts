@@ -18,13 +18,24 @@ export function useUsuarios() {
 
     const usuarios = ref<usuarios[]>([])
 
-    const obtenerFUsuarios = async() => {
+    const obtenerFUsuarios = async () => {
         try {
-            usuarios.value = await obtenerUsuarios();
-        }catch (error){
-            console.error("Error no se obtuvo los usuarios", error)
+            console.log('Solicitando usuarios...');
+
+            const res = await obtenerUsuarios();
+
+            console.log('Respuesta usuarios:', res);
+
+            usuarios.value = res;
+
+            console.log('Usuarios almacenados:', usuarios.value);
+
+        } catch (error: any) {
+            console.error('Error obteniendo usuarios:', error);
+            console.error('Status:', error.response?.status);
+            console.error('Respuesta backend:', error.response?.data);
         }
-    }
+    };
 
     const enviarFUsuarios = async() => {
         try{

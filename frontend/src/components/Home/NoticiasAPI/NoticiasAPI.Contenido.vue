@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import { onMounted } from 'vue'
     import { useNoticias } from '@/composables/contenido/useNoticias.composable';
+    import { descripcionToText } from '@/editor/renderer/renderDescripcion';
 
     const {
         noticias,
@@ -42,7 +43,7 @@
                         <td>{{ noticia.id }}</td>
                         <td>{{ noticia.titulo }}</td>
                         <td>{{ noticia.asunto }}</td>
-                        <td>{{ noticia.descripcion }}</td>
+                        <td>{{ descripcionToText(noticia.descripcion) }}</td>
                         <td>{{ noticia.version }}</td>
                         <td>{{ noticia.autor_id }}</td>
                         <td>{{ noticia.autor_nombre }}</td>

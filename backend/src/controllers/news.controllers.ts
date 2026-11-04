@@ -4,14 +4,11 @@ import { DB_TABLE_NOTICIAS, DB_TABLE_USUARIOS } from "../config"
 
 import { Request, Response } from "express"
 
-import { User } from "../models/usuarios.model";
-
 import { newsModel } from "../models/content/noticias.model"
 
 import { TokenPayload } from '../models/usuarios.model';
 
-import fs from 'fs';
-import path from 'path';
+import { removeUploadedFile, deleteStoredImage } from "../utils/uploads";
 
 export const obtenerNoticias = async (req: Request, res: Response) => {
     const user = (req as any).user as TokenPayload | undefined;
@@ -66,140 +63,145 @@ export const obtenerNoticia = async (req: Request, res: Response) => {
     }
 }
 
-export const crearNoticia = async (req: Request &{user?: User}, res: Response) => {
-    const data = req.body;
+export const crearNoticia = async (req: Request, res: Response) => {
     const file = req.file;
 
+    const user = (req as any).user as TokenPayload | undefined;
+
     if (!file) {
-        res.status(400).json({ ok: false, msg: 'Archivo imagen requerido' });
-        return
+        return res.status(400).json({ ok: false, msg: 'Archivo imagen requerido' });
     }
 
     try {
         const imagePath = `/uploads/noticias/${file.filename}`;
+        const autorId = user?.id;
 
-        const autorId = req.user?.id
+        // descripcion ya viene limpia del validador
+        const { titulo, asunto, descripcion, version } = req.body;
 
-        console.log("Usuario ID Noticias", autorId)
-            
-        const {rows} = await pool.query(
+        const { rows } = await pool.query(
             `
-                INSERT INTO ${DB_TABLE_NOTICIAS} (
-                    imagen, 
-                    titulo, 
-                    asunto, 
-                    descripcion, 
-                    version, 
-                    autor_id
-                ) VALUES ($1, $2, $3, $4, $5, $6) 
-                RETURNING *
-            `, 
-            [ 
-                imagePath,
-                data.titulo, 
-                data.asunto, 
-                data.descripcion, 
-                data.version,
-                autorId
-            ]
+            INSERT INTO ${DB_TABLE_NOTICIAS} (
+                imagen, titulo, asunto, descripcion, version, autor_id
+            ) VALUES ($1, $2, $3, $4::jsonb, $5, $6)
+            RETURNING *
+            `,
+            [imagePath, titulo, asunto, descripcion, version, autorId]
         );
-        console.log(rows)
-        
+
         return res.status(201).json(rows[0]);
     } catch (error) {
         console.error(error);
+        removeUploadedFile(req);
         return res.status(500).json({ ok: false, msg: 'Error al crear la noticia.' });
     }
-}
+};
 
 export const actualizarNoticia = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const data = req.body;
+    const id = Number(req.params.id);
     const file = req.file;
+    const user = (req as any).user as TokenPayload | undefined;
+    const esAdmin = user?.id_rol === 2;
+
+    if (!Number.isInteger(id)) {
+        removeUploadedFile(req);
+        return res.status(400).json({ ok: false, msg: 'Datos no válidos' });
+    }
 
     try {
-        // Resolver la imagen
-        let imagePath = data.imagenActual || null; // opcionalmente puedes enviar la ruta actual desde el frontend
-        if (file) {
-            imagePath = `/uploads/noticias/${file.filename}`;
+        // Propiedad: solo el autor o un admin
+        const puedeEditar = await newsModel.isEditableNew(id, user?.id, esAdmin);
 
-            // borrar imagen antigua del disco (si existe)
-            if (data.imagenActual) {
-                // const fs = require('fs');
-                const oldPath = `${process.cwd()}${data.imagenActual}`;
-                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-            }
+        if (!puedeEditar) {
+            removeUploadedFile(req);
+            return res.status(403).json({ ok: false, msg: 'No tienes permiso para editar esta noticia' });
         }
 
-        // Ejecutar UPDATE directo
-        const { rows } = await pool.query(
-        `
-        UPDATE ${DB_TABLE_NOTICIAS}
-        SET imagen = COALESCE($1, imagen),
-            titulo = COALESCE($2, titulo),
-            asunto = COALESCE($3, asunto),
-            descripcion = COALESCE($4, descripcion),
-            version = COALESCE($5, version)
-        WHERE id = $6
-        RETURNING *
-        `,
-        [   
-            imagePath,
-            data.titulo,
-            data.asunto,
-            data.descripcion,
-            data.version,
-            id
-        ]
+        // La imagen anterior se lee de la BD, nunca del body
+        const actual = await pool.query(
+            `SELECT imagen FROM ${DB_TABLE_NOTICIAS} WHERE id = $1`,
+            [id]
         );
-        console.log(rows[0])
-        if (rows.length === 0) {
-            return res.status(404).json({ ok: false, msg: 'Servidor no encontrado' });
+
+        if (actual.rowCount === 0) {
+            removeUploadedFile(req);
+            return res.status(404).json({ ok: false, msg: 'Noticia no encontrada' });
         }
+
+        const imagenAnterior: string | null = actual.rows[0].imagen;
+
+        // Solo una ruta generada por el servidor, o null para conservar la actual
+        const nuevaImagen = file ? `/uploads/noticias/${file.filename}` : null;
+
+        // Solo los campos esperados; descripcion ya viene limpia del validador
+        const { titulo, asunto, descripcion, version } = req.body;
+
+        const { rows } = await pool.query(
+            `
+            UPDATE ${DB_TABLE_NOTICIAS}
+            SET imagen = COALESCE($1, imagen),
+                titulo = COALESCE($2, titulo),
+                asunto = COALESCE($3, asunto),
+                descripcion = COALESCE($4::jsonb, descripcion),
+                version = COALESCE($5, version)
+            WHERE id = $6
+            RETURNING *
+            `,
+            [
+                nuevaImagen,
+                titulo ?? null,
+                asunto ?? null,
+                descripcion ?? null,
+                version ?? null,
+                id
+            ]
+        );
+
+        // Solo se borra la imagen vieja si se subió una nueva y el UPDATE fue bien
+        if (file) deleteStoredImage(imagenAnterior);
 
         return res.json(rows[0]);
     } catch (error) {
         console.error(error);
-        return res.status(500).json({ ok: false, msg: 'Error al actualizar servidor' });
+        removeUploadedFile(req);
+        return res.status(500).json({ ok: false, msg: 'Error al actualizar la noticia' });
     }
-}
+};
 
 export const eliminarNoticia = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    
+    const id = Number(req.params.id);
+    const user = (req as any).user as TokenPayload | undefined;
+    const esAdmin = user?.id_rol === 2;
+
+    if (!Number.isInteger(id)) {
+        return res.status(400).json({ ok: false, msg: 'Datos no válidos' });
+    }
+
     try {
-        // 1️⃣ Obtener el servidor antes de borrar
-        const result = await pool.query(
-            `SELECT * FROM ${DB_TABLE_NOTICIAS} WHERE id = $1`,
+        const puedeEditar = await newsModel.isEditableNew(id, user?.id, esAdmin);
+
+        if (!puedeEditar) {
+            return res.status(403).json({ ok: false, msg: 'No tienes permiso para eliminar esta noticia' });
+        }
+
+        // Primero el registro; la imagen solo se borra si el DELETE fue bien
+        const { rows } = await pool.query(
+            `DELETE FROM ${DB_TABLE_NOTICIAS} WHERE id = $1 RETURNING imagen`,
             [id]
         );
 
-        if (result.rowCount === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({ ok: false, msg: 'Noticia no encontrada' });
         }
 
-        const noticia = result.rows[0];
-
-        // 2️⃣ Borrar la imagen del disco si existe
-        if (noticia.imagen) {
-            const imagePath = path.join(process.cwd(), noticia.imagen);
-            if (fs.existsSync(imagePath)) {
-                fs.unlinkSync(imagePath);
-            }
-        }
-
-        // 3️⃣ Borrar el registro en la base de datos
-        await pool.query(
-            `DELETE FROM ${DB_TABLE_NOTICIAS} WHERE id = $1`,
-            [id]
-        );
+        deleteStoredImage(rows[0].imagen);
 
         return res.json({ ok: true, msg: 'Noticia eliminada correctamente', id });
     } catch (error) {
         console.error(error);
         return res.status(500).json({ ok: false, msg: 'Error al eliminar la noticia' });
     }
-}
+};
 
 export const publicarNoticia = async (req: Request, res: Response) => {
     const { id } = req.params;

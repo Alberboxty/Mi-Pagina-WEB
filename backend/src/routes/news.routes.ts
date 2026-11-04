@@ -5,6 +5,12 @@ import { createUpload } from '../middlewares/upload'
 import { verifyToken, verifyTokenAccess } from '../middlewares/jwt.middleware'
 
 import {
+    validarCrearNoticia,
+    validarActualizarNoticia,
+    responderErroresNoticia
+} from '../validators/noticias.validators'
+
+import {
     obtenerNoticias,
     obtenerNoticia,
     crearNoticia,
@@ -39,13 +45,17 @@ router.post(
     '/', 
     verifyToken,
     upload.single("imagen"), 
+    validarCrearNoticia,
+    responderErroresNoticia,
     crearNoticia
 )
 
 // RUTA: /admin/noticias/:id
 router.patch(
     '/:id', 
-    upload.single('imagen'), 
+    upload.single('imagen'),
+    validarActualizarNoticia,
+    responderErroresNoticia,
     actualizarNoticia
 )
 

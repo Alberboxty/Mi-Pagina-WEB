@@ -1,28 +1,31 @@
+<style scoped lang="scss" src="@/assets/scss/adminPannel.scss" />
 <script setup lang="ts">
-    import { useAuth } from '@/composables/useAuth.composable';
-    import { onMounted } from 'vue'
     import { admin } from '@/api/auth.api';
     import UsuariosAPI from '@/components/ControlPannel/UsuariosAPI.vue';
     import PermisosAPI from '@/components/ControlPannel/PermisosYRoles.vue'
     import PermisosModulares from '@/components/ControlPannel/PermisosModulares.vue'
-    const {
-        adminData
-    } = useAuth();
-
-    onMounted(() => {
-        adminData()
-    })
+    import AsidePannel from '@/components/ControlPannel/AsidePannel.vue';
 </script>
 
 <template>
-  <main>
-    <h1>Panel Administrador</h1>
+  <div class="AdminPannel">
+    <AsidePannel/>
+    <main>
+      <h1>Panel Administrador</h1>
+      <p>{{ admin }}</p>
+      <section>
+        <UsuariosAPI></UsuariosAPI>
+        <PermisosAPI></PermisosAPI>
+        <PermisosModulares></PermisosModulares>
+      </section>
+
+    </main>
     
-    <p>{{ admin }}</p>
-    <UsuariosAPI></UsuariosAPI>
-    <PermisosAPI></PermisosAPI>
-    <PermisosModulares></PermisosModulares>
+    
 
     
-  </main>
+    
+    
+    
+  </div>
 </template>

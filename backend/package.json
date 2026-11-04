@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "ts-node-dev src/index.ts",
     "tsc": "tsc",
+    "vitest": "vitest",
     "lint": "ts-standard",
     "start": "node build/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -14,19 +15,34 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.4",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/morgan": "^1.9.10",
+    "@types/multer": "^2.3.0",
     "@types/node": "^25.1.0",
+    "@types/pg": "^8.23.1",
     "dotenv": "^17.2.3",
     "ts-node-dev": "^2.0.0",
     "ts-standard": "^12.0.2",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "5.1.0",
-    "morgan": "^1.10.1"
+    "express-validator": "^7.3.2",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.5.0",
+    "nodemailer": "^10.3.1",
+    "pg": "^8.23.1"
   },
   "eslintConfig": {
     "parserOptions": {

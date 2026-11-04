@@ -105,6 +105,62 @@ export const listItem: BlockSpec = {
     }
 };
 
+// ---- Enlaces ----
+
+const ALLOWED_PROTOCOLS = ["http:", "https:", "mailto:"];
+const MAX_URL_LENGTH = 2048;
+
+/** Devuelve la URL normalizada si es segura, o null. */
+export function sanitizeUrl(value: unknown): string | null {
+    if (typeof value !== "string" || value.length === 0 || value.length > MAX_URL_LENGTH) {
+        return null;
+    }
+
+    // Sin espacios ni caracteres de control (evita trucos como "java\tscript:").
+    if (/[\s\u0000-\u001F\u007F]/.test(value)) {
+        return null;
+    }
+
+    try {
+        const url = new URL(value); // lanza si es relativa
+
+        return ALLOWED_PROTOCOLS.includes(url.protocol) ? url.href : null;
+    } catch {
+        return null;
+    }
+}
+
+export const link: MarkSpec = {
+    name: "link",
+
+    validateAttributes: raw => {
+        if (!isPlainObject(raw)) {
+            return null;
+        }
+
+        for (const key of Object.keys(raw)) {
+            if (key !== "href") {
+                return null;
+            }
+        }
+
+        const href = sanitizeUrl(raw.href);
+
+        return href === null ? null : { href };
+    },
+
+    render: (inner, attributes) => {
+        // El renderer puede recibir documentos sin validar: se comprueba otra vez.
+        const href = sanitizeUrl(attributes.href);
+
+        if (href === null) {
+            return inner;
+        }
+
+        return `<a href="${escapeHtml(href)}" rel="noopener noreferrer" target="_blank">${inner}</a>`;
+    }
+};
+
 export const defaultSchema = createSchema({
     blocks: [paragraph],
     marks: [italic, bold, underline, strikethrough]
@@ -114,4 +170,10 @@ export const defaultSchema = createSchema({
 export const listsSchema = createSchema({
     blocks: [paragraph, listItem],
     marks: [italic, bold, underline, strikethrough]
+});
+
+/** Listas y enlaces: pensado, por ejemplo, para noticias. */
+export const richSchema = createSchema({
+    blocks: [paragraph, listItem],
+    marks: [italic, bold, underline, strikethrough, link] // link al final: envuelve al resto
 });

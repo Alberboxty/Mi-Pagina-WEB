@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import {useUsuarios, input_usuario, input_email, input_id_rol, input_verified} from '../../composables/usuarios.composable'
+import {useUsuarios, input_usuario, input_email, input_id_rol, input_verified} from '@/composables/usuarios.composable'
 
 const {
     usuarios,
@@ -12,13 +12,14 @@ const {
 
 
 onMounted(() => {
+    console.log('UsuariosAPI: onMounted ejecutado');
     obtenerFUsuarios()
 })
 
 </script>
 
 <template>
-    <div>
+    <section class="Usuarios">
         <form @submit.prevent="enviarFUsuarios">
             <h1>Editar</h1>
 
@@ -65,5 +66,5 @@ onMounted(() => {
                 </tr>
             </tbody>
         </table>
-    </div>
+    </section>
 </template>
